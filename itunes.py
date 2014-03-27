@@ -7,22 +7,32 @@ class Track(object):
     def __init__(self, track):
         self._track = track
 
+    def __repr__(self):
+        return u'<Track: {} by {} on {}>'.format(self.name, self.artist,
+                                                 self.album)
+
     @property
     def name(self):
-        return self._track.name()
+        return unicode(self._track.name())
 
     @property
     def artist(self):
-        return self._track.artist()
+        return unicode(self._track.artist())
 
     @property
     def album(self):
-        return self._track.album()
+        return unicode(self._track.album())
 
     @property
     def seconds(self):
         mm, ss = self._track.time().split(':')
         return int(mm) * 60 + int(ss)
+
+    @property
+    def year(self):
+        return unicode(self._track.year())
+
+    #TODO sort fields
 
     def play(self):
         return self._track.play()
