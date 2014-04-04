@@ -1,5 +1,7 @@
 
 
+from collections import OrderedDict
+
 from appscript import app, reference
 
 
@@ -10,6 +12,10 @@ class Track(object):
     def __repr__(self):
         return u'<Track: {} by {} on {}>'.format(self.name, self.artist,
                                                  self.album)
+
+    @property
+    def id(self):
+        return int(self._track.id())
 
     @property
     def name(self):
@@ -37,10 +43,21 @@ class Track(object):
     def play(self):
         return self._track.play()
 
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'title': self.name,
+            'artist': self.artist,
+            'album': self.album,
+            # 'time': self.seconds,
+            'year': self.year,
+        }
+
 
 class Playlist(object):
     def __init__(self, playlist):
         self._playlist = playlist
+        self._tracks = None
 
     def __repr__(self):
         return u'<Playlist: {}>'.format(self.name)
@@ -49,15 +66,22 @@ class Playlist(object):
     def name(self):
         return self._playlist.name()
 
+    def _prime_tracks(self):
+        if not self._tracks:
+            self._tracks = OrderedDict()
+
+            for track in self._playlist.tracks():
+                t = Track(track)
+                self._tracks[t.id] = t
+
     @property
     def tracks(self):
-        return [Track(track) for track in self._playlist.tracks()]
+        self._prime_tracks()
+        return self._tracks.values()
 
-    def play(self):
-        try:
-            self.tracks[0].play()
-        except IndexError:
-            pass
+    def get_track(self, id):
+        self._prime_tracks()
+        return self._tracks.get(id)
 
     def search(self, query):
         return [Track(track) for track in self._playlist.search(for_=query)]
@@ -101,11 +125,11 @@ class iTunes(object):
             if source.name == name:
                 return source
 
-    def get_playlist(self, source, playlist):
-        source = self.get_source(source)
-
-        if not source:
-            return
+    def get_playlist(self, playlist, source=None):
+        if source is None:
+            source = self.sources[0]
+        else:
+            source = self.get_source(source)
 
         return source.get_playlist(playlist)
 
