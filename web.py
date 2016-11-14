@@ -7,7 +7,6 @@ from itunes import iTunes
 
 app = Flask(__name__)
 itunes = iTunes()
-playlist = itunes.get_playlist('Internet Songs')
 
 
 def make_json_response(data):
@@ -26,16 +25,12 @@ def index():
 
 @app.route('/tracks')
 def tracks():
-    tracks = [track.as_dict() for track in playlist.tracks[:20]]
+    tracks = [track.as_dict() for track in itunes.library.tracks]
     return make_json_response(tracks)
 
 
 @app.route('/tracks/<int:track_id>', methods=['GET', 'POST'])
 def track(track_id):
-    track = playlist.get_track(track_id)
-    if not track:
-        abort(404)
-
     if request.method == 'GET':
         return make_json_response(track.as_dict())
 
@@ -44,7 +39,7 @@ def track(track_id):
 
         if obj.get('action') == 'play':
             #TODO change to itunes.play(track) if possible
-            track.play()
+            itunes.play(track_id)
             return ''
         elif obj.get('action') == 'pause':
             itunes.pause()
@@ -56,9 +51,5 @@ def track(track_id):
     abort(400)
 
 
-@app.route('/static/<path:filename>')
-def files(filename):
-        return send_from_directory('static', filename)
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run('0.0.0.0', debug=True)

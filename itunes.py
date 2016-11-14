@@ -15,6 +15,7 @@ class Track(object):
 
     @property
     def id(self):
+        # return int(self._track.database_ID())
         return int(self._track.id())
 
     @property
@@ -134,14 +135,19 @@ class iTunes(object):
         return source.get_playlist(playlist)
 
     @property
+    def library(self):
+        return self.get_playlist('Music')
+
+    @property
     def current_playlist(self):
         try:
             return Playlist(self._app.current_playlist())
         except reference.CommandError:
             return None
 
-    def play(self):
-        self._app.play()
+    def play(self, track_id):
+        track = self.library.get_track(track_id)
+        self._app.current_playlist.play(track._track, once=False)
 
     def pause(self):
         self._app.pause()
@@ -153,4 +159,4 @@ class iTunes(object):
         self._app.next_track()
 
     def previous(self):
-        self._app.previous_track()
+        self._app.back_track()
